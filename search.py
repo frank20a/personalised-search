@@ -9,11 +9,12 @@ es = Elasticsearch()
 def avg(A): return sum(A) / len(A)
 
 
-def movie_score_avg(max_BM25, max_usr, max_avg, m):
-    if m['usr_score'] is None:
-        return (m['BM25_score'] / max_BM25 + m['avg_score'] / max_avg) / 2
-    else:
-        return (m['BM25_score'] / max_BM25 + m['usr_score'] / max_usr + m['avg_score'] / max_avg) / 3
+def movie_score_avg(m, max_BM25, max_usr, max_avg, w_BM25=1, w_usr=1, w_avg=1):
+    n_BM25 = w_BM25 * m['BM25_score'] / max_BM25
+    n_avg = w_avg * m['avg_score'] / max_avg
+    n_usr = 0 if m['usr_score'] is None else (w_usr * m['usr_score'] / max_usr)
+    w = w_BM25 + w_avg + (0 if m['usr_score'] is None else w_usr)
+    return (n_BM25 + n_avg + n_usr) / w
 
 
 def get_usr_rating(movieID, userID):
@@ -66,16 +67,15 @@ def search_title_BM25(q: str, size: int = 10000) -> Tuple[list, float]:
     A = []
     for n, hit in enumerate(res['hits']['hits']):
         A.append(hit['_source'])
-        A[n]['id'] = hit['_id']
+        A[n]['id'] = int(hit['_id'])
         A[n]['BM25_score'] = hit['_score']
     return A, res['hits']['max_score']
 
 
-def personalized_search(query, userID):
+def personalized_search(query, userID, limit=10):
     res, max_BM25 = search_title_BM25(query)
     max_usr = max_avg = -float('inf')
     for movie in res:
-        print(get_usr_rating(movie['id'], userID))
         movie['usr_score'] = get_usr_rating(movie['id'], userID)
         if movie['usr_score'] is not None and movie['usr_score'] > max_usr: max_usr = movie['usr_score']
 
@@ -83,11 +83,10 @@ def personalized_search(query, userID):
         if movie['avg_score'] > max_avg: max_avg = movie['avg_score']
 
     for movie in res:
-        movie['normalized_score'] = movie_score_avg(max_BM25, max_usr, max_avg, movie)
+        movie['normalized_score'] = movie_score_avg(movie, max_BM25, max_usr, max_avg, w_usr=2)
 
-    return sorted(res, key=lambda m: m['normalized_score'], reverse=True)
+    return sorted(res, key=lambda m: m['normalized_score'], reverse=True)[:min(len(res), limit)]
 
 
-print(get_usr_rating(1, 154))
 for i in personalized_search('Toy', 154):
     print(i)
