@@ -9,6 +9,16 @@ def avg(x):
     return sum(x) / len(x)
 
 
+def avg_cluster(cluster, genre) -> float:
+    s = c = 0
+    for user in cluster:
+        temp = user.genre_avgs[genre]
+        if temp is not None:
+            s += temp
+            c += 1
+    return s / c
+
+
 # Import movie csv into pandas
 movies = pd.read_csv('bin/movies.csv', dtype={'movieId': 'Int64'})
 movies['genres'] = movies['genres'].str.split('|')
@@ -72,9 +82,18 @@ class User:
                 self.genre_avgs_prefilled[genre] = avg_ratings_per_genre[genre]
 
         self.cluster = None
+        self.scores = None
 
-    def set_cluster(self, cluster):
-        self.cluster = cluster
+    def set_cluster(self, label):
+        self.cluster = label
+
+    def recalculated_scores(self, cluster):
+        self.scores = self.genre_avgs.copy()
+        for genre in self.scores:
+            if self.scores[genre] is None:
+                self.scores[genre] = avg_cluster(cluster, genre)
+
+        return self
 
 
 def load_users():
@@ -92,10 +111,18 @@ def load_users():
 
 def cluster(users, n_clusters=7):
     labels = KMeans(n_clusters=n_clusters).fit_predict([tuple(user.genre_avgs_prefilled.values()) for user in users])
+
+    clusters = [[] for i in range(n_clusters)]
     for n, label in enumerate(labels):
         users[n].set_cluster(label)
+        clusters[label].append(users[n])
+
+    return clusters
 
 
 if __name__ == '__main__':
     users = load_users()
-    cluster(users)
+    clusters = cluster(users)
+
+    print(users[0].genre_avgs)
+    print(users[0].recalculated_scores(clusters[users[0].cluster]).scores)
