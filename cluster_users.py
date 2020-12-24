@@ -1,11 +1,13 @@
 import pandas as pd
 import json
+from sklearn.cluster import KMeans
 import pickle
 
 
 def avg(x):
     if len(x) == 0: return None
-    return sum(x)/len(x)
+    return sum(x) / len(x)
+
 
 # Import movie csv into pandas
 movies = pd.read_csv('bin/movies.csv', dtype={'movieId': 'Int64'})
@@ -70,5 +72,17 @@ class User():
                 self.genre_avgs_prefilled[genre] = avg_ratings_per_genre[genre]
 
 
-u = User(2)
-print(u.genre_avgs)
+def get_users():
+    try:
+        with open('bin/users.pickle', 'rb') as file:
+            users = pickle.load(file)
+            print('users loaded from pickle')
+    except FileNotFoundError:
+        users = [User(i) for i in range(1, 672)]
+        with open('bin/users.pickle', 'wb') as file:
+            pickle.dump(users, file)
+
+    return users
+
+if __name__ == '__main__':
+    users = get_users()
