@@ -8,14 +8,14 @@ def avg(x):
     return sum(x)/len(x)
 
 # Import movie csv into pandas
-movies = pd.read_csv('./movies.csv', dtype={'movieId': 'Int64'})
+movies = pd.read_csv('bin/movies.csv', dtype={'movieId': 'Int64'})
 movies['genres'] = movies['genres'].str.split('|')
 # Import ratings csv into pandas
-ratings = pd.read_csv('./ratings.csv', dtype={'userId': 'Int64', 'movieId': 'Int64', 'timestamp': 'Int64'})
+ratings = pd.read_csv('bin/ratings.csv', dtype={'userId': 'Int64', 'movieId': 'Int64', 'timestamp': 'Int64'})
 
 # Create or import list of genres that appear in movies
 try:
-    with open('genres.json', 'r', encoding='utf-8') as file:
+    with open('bin/genres.json', 'r', encoding='utf-8') as file:
         genres = json.load(file)
         print('genres loaded from JSON')
 except FileNotFoundError:
@@ -23,12 +23,12 @@ except FileNotFoundError:
     for index, row in movies.iterrows():
         for genre in row['genres']:
             if genre not in genres: genres.append(genre)
-    with open('genres.json', 'w', encoding='utf-8') as file:
+    with open('bin/genres.json', 'w', encoding='utf-8') as file:
         json.dump(genres, file)
 
 # Create or import dict with average genre rating
 try:
-    with open('avg_ratings_per_genre.json', 'r', encoding='utf-8') as file:
+    with open('bin/avg_ratings_per_genre.json', 'r', encoding='utf-8') as file:
         avg_ratings_per_genre = json.load(file)
         print('avg_ratings_per_genre loaded from JSON')
 except FileNotFoundError:
@@ -42,7 +42,7 @@ except FileNotFoundError:
     for genre in avg_ratings_per_genre:
         avg_ratings_per_genre[genre] = avg(avg_ratings_per_genre[genre])
 
-    with open('avg_ratings_per_genre.json', 'w', encoding='utf-8') as file:
+    with open('bin/avg_ratings_per_genre.json', 'w', encoding='utf-8') as file:
         json.dump(avg_ratings_per_genre, file)
 
 

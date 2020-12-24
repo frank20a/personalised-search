@@ -6,7 +6,7 @@ import re
 def import_movies():
     es = Elasticsearch()
 
-    with open('movies.csv', encoding='utf-8') as datafile:
+    with open('bin/movies.csv', encoding='utf-8') as datafile:
         datareader = csv.DictReader(datafile, delimiter=',', quotechar='"')
         movies = []
         for row in datareader:
@@ -29,7 +29,7 @@ def import_movies():
 def import_ratings():
     es = Elasticsearch()
 
-    with open('ratings.csv', encoding='utf-8') as datafile:
+    with open('bin/ratings.csv', encoding='utf-8') as datafile:
         datareader = csv.DictReader(datafile, delimiter=',', quotechar='"')
         ratings = []
         for n, row in enumerate(datareader):
