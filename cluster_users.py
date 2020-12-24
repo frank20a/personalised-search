@@ -48,7 +48,7 @@ except FileNotFoundError:
         json.dump(avg_ratings_per_genre, file)
 
 
-class User():
+class User:
     def __init__(self, userID):
         self.userID = userID
 
@@ -71,8 +71,13 @@ class User():
                 # Fill missing ratings with mean of all ratings
                 self.genre_avgs_prefilled[genre] = avg_ratings_per_genre[genre]
 
+        self.cluster = None
 
-def get_users():
+    def set_cluster(self, cluster):
+        self.cluster = cluster
+
+
+def load_users():
     try:
         with open('bin/users.pickle', 'rb') as file:
             users = pickle.load(file)
@@ -84,5 +89,13 @@ def get_users():
 
     return users
 
+
+def cluster(users, n_clusters=7):
+    labels = KMeans(n_clusters=n_clusters).fit_predict([tuple(user.genre_avgs_prefilled.values()) for user in users])
+    for n, label in enumerate(labels):
+        users[n].set_cluster(label)
+
+
 if __name__ == '__main__':
-    users = get_users()
+    users = load_users()
+    cluster(users)
