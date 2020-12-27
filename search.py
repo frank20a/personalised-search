@@ -44,10 +44,22 @@ def get_usr_rating_from_elastic(movieID, userID):
 def get_usr_rating(movie, user):
     # users have their ratings saved on the User class of user.py
     try:
-        return float(user.movie_ratings[movie['id']]), False
+        # print(movie['id'], ': accessing user rating... ', end='')
+        t = float(user.movie_ratings[movie['id']])
+        # print('successful')
+        return t, False
     except KeyError:
-        key = max(user.Cluster_score, key=lambda n: float(user.Cluster_score[n]) if n in movie['genres'] else -inf)
-        return user.Cluster_score[key], True
+        # print('failed. trying cluster...', end='')
+        for u in user.cluster:
+            # print('u:', u.ID, end=' ')
+            s = c = 0
+            for movie_id in u.movie_ratings:
+                if movie_id == movie['id']:
+                    s += u.movie_ratings[movie_id]
+                    c += 1
+        # print('found', c, 'ratings in the cluster')
+        if c == 0: return 0, True      # No rating found even inside cluster... This will be solved with neural
+        return s/c, True
 
 
 def get_avg_rating_from_elastic(movieID):
@@ -96,7 +108,6 @@ def search_BM25(q: str, size: int = 10000) -> Tuple[list, float]:
 
 def personalized_search(query: str, user: User, limit: int = 10):
     res, max_BM25 = search_BM25(query)
-    user.recalculate_cluster_score()
 
     max_usr = max_avg = -inf
     for movie in res:
@@ -116,5 +127,9 @@ def personalized_search(query: str, user: User, limit: int = 10):
 if __name__ == '__main__':
     users = load_users()
     cluster(users)
-    for i in personalized_search('Star', users[219]):
-        print(i)
+    while True:
+        print();print('='*130)
+        usr, query = int(input("User Number: ")), input('Search: ')
+        for i in personalized_search(query, users[usr-1]):
+            print("%72s (%s) - OVERALL: %.3f  |  BM25: %.2f, USR: %.2f-%d, AVG: %.2f" % (i['title'], i['year'],
+                i['normalized_score'], i['BM25_score'], i['usr_score'], i['usr_score_from_cluster'], i['avg_score']))

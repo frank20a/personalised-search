@@ -83,16 +83,16 @@ class User:
                 self.genre_avgs_prefilled[genre] = avg_ratings_per_genre[genre]
 
         self.cluster = None
-        self.Cluster_score = None
         self.Neural_score = None
 
-    def recalculate_cluster_score(self):
-        self.Cluster_score = self.genre_avgs.copy()
-        for genre in self.Cluster_score:
-            if self.Cluster_score[genre] is None:
-                self.Cluster_score[genre] = avg_cluster(self.cluster, genre)
-
-        return self
+    # ======= DEPRECATED =======
+    # def recalculate_cluster_score(self):
+    #     self.Cluster_score = self.genre_avgs.copy()
+    #     for genre in self.Cluster_score:
+    #         if self.Cluster_score[genre] is None:
+    #             self.Cluster_score[genre] = avg_cluster(self.cluster, genre)
+    #
+    #     return self
 
 
 def load_users():
