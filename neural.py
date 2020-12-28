@@ -33,19 +33,24 @@ def get_title_tokens(movie_title, vocab_mul: float = 3):
     return padded_docs, vocab_size, max_sen_length
 
 
-class FrankNet(keras.Sequential):
+class FrankNet(KerasRegressor):
     def __init__(self, vocab_size, input_len):
-        super().__init__()
+        super().__init__(build_fn=lambda: self.get_model(vocab_size, input_len), epochs=100, batch_size=5)
 
-        self.add(layers.Embedding(vocab_size, 8, input_length=input_len))
-        self.add(layers.Flatten())
-        self.add(layers.Dense(60, kernel_initializer='normal', activation='relu'))
-        self.add(layers.Dense(6,  kernel_initializer='normal', activation='relu'))
-        self.add(layers.Dense(1,  kernel_initializer='normal'))
+    @staticmethod
+    def get_model(vocab_size, input_len):
+        model = keras.Sequential()
+        model.add(layers.Embedding(vocab_size, 8, input_length=input_len))
+        model.add(layers.Flatten())
+        model.add(layers.Dense(60, kernel_initializer='normal', activation='relu'))
+        model.add(layers.Dense(6, kernel_initializer='normal', activation='relu'))
+        model.add(layers.Dense(1, kernel_initializer='normal'))
 
-        self.compile(loss='mean_squared_error', optimizer='adam')
+        model.compile(loss='mean_squared_error', optimizer='adam')
         print('\n\n')
-        self.summary()
+        model.summary()
+
+        return model
 
 
 if __name__ == '__main__':
@@ -71,7 +76,8 @@ if __name__ == '__main__':
     IN, vocab_size, max_sen_length = get_title_tokens(IN)
 
     # model = FrankNet(vocab_size, max_sen_length)
-    estimator = KerasRegressor(build_fn=lambda: FrankNet(vocab_size, max_sen_length), epochs=100, batch_size=5)
-    kfold = KFold(n_splits=4)
-    results = cross_val_score(estimator, IN, np.array(OUT), cv=kfold)
-    print("Baseline: %.2f (%.2f) MSE" % (results.mean(), results.std()))
+    estimator = FrankNet(vocab_size, max_sen_length)
+    estimator.fit(IN, np.array(OUT))
+    while True:
+        token, _, _ = get_title_tokens([input("Predict for user 353: ")])
+        print(estimator.predict(token))
