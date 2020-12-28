@@ -1,7 +1,7 @@
 from elasticsearch import Elasticsearch
 from typing import *
 from user import User, ratings, load_users
-from cluster_users import cluster
+from cluster import cluster
 
 inf = float('inf')
 
@@ -131,5 +131,5 @@ if __name__ == '__main__':
         print();print('='*130)
         usr, query = int(input("User Number: ")), input('Search: ')
         for i in personalized_search(query, users[usr-1]):
-            print("%72s (%s) - OVERALL: %.3f  |  BM25: %.2f, USR: %.2f-%d, AVG: %.2f" % (i['title'], i['year'],
+            print("%60s (%s) - OVERALL: %.3f  |  BM25: %.2f, USR: %.2f-%d, AVG: %.2f" % (i['title'], i['year'],
                 i['normalized_score'], i['BM25_score'], i['usr_score'], i['usr_score_from_cluster'], i['avg_score']))

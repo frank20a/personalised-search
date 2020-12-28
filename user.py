@@ -1,6 +1,7 @@
 import pandas as pd
 import json
 import pickle
+import re
 
 
 def avg(x):
@@ -20,6 +21,8 @@ def avg_cluster(cluster, genre) -> float:
 
 # Import movie csv into pandas
 movies = pd.read_csv('bin/movies.csv', dtype={'movieId': 'Int64'})
+# movies['year'] = movies['title'].str.extract(r'\((.*)\)')
+# movies['title'] = movies['title'].str.extract(r'(.*)[( \(.*\))\n]')
 movies['genres'] = movies['genres'].str.split('|')
 # Import ratings csv into pandas
 ratings = pd.read_csv('bin/ratings.csv', dtype={'userId': 'Int64', 'movieId': 'Int64', 'timestamp': 'Int64'})
@@ -108,4 +111,5 @@ def load_users():
     return users
 
 
-if __name__ == '__main__': print(User(1).movie_ratings)
+if __name__ == '__main__':
+    print(User(1).movie_ratings)
