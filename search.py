@@ -2,6 +2,7 @@ from elasticsearch import Elasticsearch
 from typing import *
 from user import User, ratings, load_users
 from cluster import cluster
+import pickle
 
 inf = float('inf')
 
@@ -47,7 +48,7 @@ def get_usr_rating(movie, user):
         # print(movie['id'], ': accessing user rating... ', end='')
         t = float(user.movie_ratings[movie['id']])
         # print('successful')
-        return t, False
+        return t, 'USER'
     except KeyError:
         # print('failed. trying cluster...', end='')
         for u in user.cluster:
@@ -58,8 +59,10 @@ def get_usr_rating(movie, user):
                     s += u.movie_ratings[movie_id]
                     c += 1
         # print('found', c, 'ratings in the cluster')
-        if c == 0: return 0, True      # No rating found even inside cluster... This will be solved with neural
-        return s/c, True
+        if c == 0:
+            score = user.estimate(movie['id'])
+            return score, 'NETW'      # No rating found even inside cluster... This will be solved with neural
+        return s/c, 'CLUS'
 
 
 def get_avg_rating_from_elastic(movieID):
@@ -118,18 +121,18 @@ def personalized_search(query: str, user: User, limit: int = 10):
         if movie['avg_score'] > max_avg: max_avg = movie['avg_score']
 
     for movie in res:
-        movie['normalized_score'] = movie_score_avg(movie, max_BM25, max_usr, max_avg,
-                                                    w_usr=2 if movie['usr_score_from_cluster'] else 5)
-
+        if movie['usr_score_from_cluster'] == 'USER': w_usr = 15
+        elif movie['usr_score_from_cluster'] == 'CLUS': w_usr = 8
+        elif movie['usr_score_from_cluster'] == 'NETW': w_usr = 1
+        movie['normalized_score'] = movie_score_avg(movie, max_BM25, max_usr, max_avg, w_usr=w_usr, w_BM25=4, w_avg=8)
     return sorted(res, key=lambda m: m['normalized_score'], reverse=True)[:min(len(res), limit)]
 
 
-if __name__ == '__main__':
-    users = load_users()
-    cluster(users)
-    while True:
-        print();print('='*130)
-        usr, query = int(input("User Number: ")), input('Search: ')
-        for i in personalized_search(query, users[usr-1]):
-            print("%60s (%s) - OVERALL: %.3f  |  BM25: %.2f, USR: %.2f-%d, AVG: %.2f" % (i['title'], i['year'],
-                i['normalized_score'], i['BM25_score'], i['usr_score'], i['usr_score_from_cluster'], i['avg_score']))
+users = load_users()
+cluster(users)
+while True:
+    print();print('='*130)
+    query, usr = input('Search: '), int(input("User Number: "))
+    for i in personalized_search(query, users[usr-1]):
+        print("%60s (%s) - OVERALL: %.3f  |  BM25: %4.2f, USR: %.2f-%s, AVG: %.2f" % (i['title'], i['year'],
+            i['normalized_score'], i['BM25_score'], i['usr_score'], i['usr_score_from_cluster'], i['avg_score']))

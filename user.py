@@ -2,6 +2,7 @@ import pandas as pd
 import json
 import pickle
 import re
+from neural import FrankNet, get_title_vector
 
 
 def avg(x):
@@ -86,16 +87,35 @@ class User:
                 self.genre_avgs_prefilled[genre] = avg_ratings_per_genre[genre]
 
         self.cluster = None
-        self.Neural_score = None
+        self.estimator = None
 
-    # ======= DEPRECATED =======
-    # def recalculate_cluster_score(self):
-    #     self.Cluster_score = self.genre_avgs.copy()
-    #     for genre in self.Cluster_score:
-    #         if self.Cluster_score[genre] is None:
-    #             self.Cluster_score[genre] = avg_cluster(self.cluster, genre)
-    #
-    #     return self
+    def train_network(self):
+        print("Training Network...")
+        IN = []
+        OUT = []
+
+        self.estimator = FrankNet(self.ID)
+
+        for movieID in self.movie_ratings:
+            temp = []
+            for genre in genres[:-1]:
+                temp.append(1 if genre in movies[movies['movieId'] == movieID]['genres'].to_list()[0] else 0)
+            OUT.append([self.movie_ratings[movieID]])
+            IN.append(get_title_vector(movies[movies['movieId'] == movieID]['title'].to_list()[0]) + temp)
+        self.estimator.fit(IN, OUT, verbose=False)
+        print('\n', '=' * 60, '\n')
+
+    def estimate(self, movieID):
+        if self.estimator is None:
+            self.train_network()
+
+        temp = []
+        for genre in genres[:-1]:
+            temp.append(1 if genre in movies[movies['movieId'] == movieID]['genres'].to_list()[0] else 0)
+        IN = get_title_vector(movies[movies['movieId'] == movieID]['title'].to_list()[0]) + temp
+
+        score = max(0, min(5, float(self.estimator.predict([IN]))))
+        return score
 
 
 def load_users():
@@ -112,4 +132,4 @@ def load_users():
 
 
 if __name__ == '__main__':
-    print(User(1).movie_ratings)
+    print(User(353).estimate(800))

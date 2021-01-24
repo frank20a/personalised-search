@@ -2,7 +2,7 @@ from sklearn.cluster import KMeans
 from user import load_users, User
 
 
-def cluster(users, n_clusters=7):
+def cluster(users, n_clusters=15):
     labels = KMeans(n_clusters=n_clusters).fit_predict([tuple(user.genre_avgs_prefilled.values()) for user in users])
 
     clusters = [[] for i in range(n_clusters)]
