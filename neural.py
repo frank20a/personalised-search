@@ -3,18 +3,13 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.preprocessing.text import one_hot
 import re
 import numpy as np
-from scipy import spatial
-from sklearn.model_selection import KFold, cross_val_score, train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
 from gensim.models import KeyedVectors
 from gensim.scripts.glove2word2vec import glove2word2vec
 from gensim.test.utils import datapath, get_tmpfile
 from tensorflow.keras.wrappers.scikit_learn import KerasRegressor
-import pickle
 from os import getcwd, path
 
 # Load word vectors from GloVe
@@ -97,7 +92,7 @@ def get_title_vector(title):
 
 class FrankNet(KerasRegressor):
     def __init__(self, userID):
-        super().__init__(build_fn=self.get_model, epochs=100, batch_size=15)
+        super().__init__(build_fn=self.get_model, epochs=50, batch_size=5)
         self.userID = userID
 
     @staticmethod
@@ -121,6 +116,7 @@ class FrankNet(KerasRegressor):
         except OSError:
             super().fit(x, y, *args, **kwargs)
             self.model.save('bin/user_models/m' + str(self.userID) + '.h5')
+            print('\n', '=' * 60, '\n')
 
 
 if __name__ == '__main__':

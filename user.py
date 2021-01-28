@@ -1,7 +1,6 @@
 import pandas as pd
 import json
 import pickle
-import re
 from neural import FrankNet, get_title_vector
 
 
@@ -103,7 +102,6 @@ class User:
             OUT.append([self.movie_ratings[movieID]])
             IN.append(get_title_vector(movies[movies['movieId'] == movieID]['title'].to_list()[0]) + temp)
         self.estimator.fit(IN, OUT, verbose=False)
-        print('\n', '=' * 60, '\n')
 
     def estimate(self, movieID):
         if self.estimator is None:

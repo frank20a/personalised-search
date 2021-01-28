@@ -1,5 +1,5 @@
 from sklearn.cluster import KMeans
-from user import load_users, User
+from user import load_users
 
 
 def cluster(users, n_clusters=15):

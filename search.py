@@ -123,8 +123,8 @@ def personalized_search(query: str, user: User, limit: int = 10):
     for movie in res:
         if movie['usr_score_from_cluster'] == 'USER': w_usr = 15
         elif movie['usr_score_from_cluster'] == 'CLUS': w_usr = 8
-        elif movie['usr_score_from_cluster'] == 'NETW': w_usr = 1
-        movie['normalized_score'] = movie_score_avg(movie, max_BM25, max_usr, max_avg, w_usr=w_usr, w_BM25=4, w_avg=8)
+        elif movie['usr_score_from_cluster'] == 'NETW': w_usr = 3
+        movie['normalized_score'] = movie_score_avg(movie, max_BM25, max_usr, max_avg, w_usr=w_usr, w_BM25=4, w_avg=6)
     return sorted(res, key=lambda m: m['normalized_score'], reverse=True)[:min(len(res), limit)]
 
 
