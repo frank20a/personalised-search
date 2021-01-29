@@ -11,18 +11,32 @@ from gensim.scripts.glove2word2vec import glove2word2vec
 from gensim.test.utils import datapath, get_tmpfile
 from tensorflow.keras.wrappers.scikit_learn import KerasRegressor
 from os import getcwd, path
+import pickle
 
-# Load word vectors from GloVe
+vectors = None
 try:
-    vectors = KeyedVectors.load(path.join(getcwd(), 'bin/glove.wv'))
+    with open('bin/vocabulary.pickle', 'rb') as file:
+        vectors = pickle.load(file)
+        print('vocabulary loaded from pickle')
 except FileNotFoundError:
-    tmp_file = get_tmpfile(path.join(getcwd(), 'bin/temp_word2vec.txt'))
-    _ = glove2word2vec(datapath(path.join(getcwd(), 'bin/glove.6B.100d.txt')), tmp_file)
-    vectors = KeyedVectors.load_word2vec_format(tmp_file)
-    print(type(vectors))
-    vectors.save(path.join(getcwd(), 'bin/glove.wv'))
+    raise Exception('Vocabulary not found')
 
-    print('word vectors loaded from text and save to word2vec .wv')
+
+
+# ========== Code for creating vocabulary pickle ==========
+# def load_vectors():
+#     # Load word vectors from GloVe
+#     global vectors
+#     try:
+#         vectors = KeyedVectors.load(path.join(getcwd(), 'bin/glove.wv'))
+#     except FileNotFoundError:
+#         tmp_file = get_tmpfile(path.join(getcwd(), 'bin/temp_word2vec.txt'))
+#         _ = glove2word2vec(datapath(path.join(getcwd(), 'bin/glove.6B.100d.txt')), tmp_file)
+#         vectors = KeyedVectors.load_word2vec_format(tmp_file)
+#         print(type(vectors))
+#         vectors.save(path.join(getcwd(), 'bin/glove.wv'))
+#
+#         print('word vectors loaded from text and save to word2vec .wv')
 
 
 def pre_process(s: str):
@@ -118,6 +132,21 @@ class FrankNet(KerasRegressor):
             self.model.save('bin/user_models/m' + str(self.userID) + '.h5')
             print('\n', '=' * 60, '\n')
 
+
+# ========== Code for creating vocabulary pickle ==========
+# if __name__ == '__main__':
+#     from user import load_users, movies, genres
+#     load_vectors()
+#     vocabulary = {}
+#     for title in movies['title']:
+#         for word in pre_process(title).split():
+#             try:
+#                 if word not in vocabulary: vocabulary[word] = vectors[word]
+#             except KeyError:
+#                 print('skipping', word, 'is unknown word :(')
+#     with open('bin/vocabulary.pickle', 'wb') as file:
+#         pickle.dump(vocabulary, file)
+#         print('dumped vocab in pickle')
 
 if __name__ == '__main__':
     from user import load_users, movies, genres
